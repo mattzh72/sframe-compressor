@@ -10,21 +10,6 @@ from utils.annotations import compress_annotations
 from utils.image import compress_img, compile_video
 from utils.mask import compress_masks
 
-
-parser = argparse.ArgumentParser(description='This compresses an SFrame in Turicreate format.')
-parser.add_argument('-s', help='The SFrame directory.', required=True)
-parser.add_argument('-o', help='The output directory.', required=True)
-args = vars(parser.parse_args())
-
-sframes = [file for file in os.listdir(args['s']) if file.endswith(".sframe")]
-pbar = tqdm(sframes)
-for sframe in pbar:
-	pbar.set_description("Loading in {0}".format(sframe))
-	# LOAD IN 
-	sf = tc.load_sframe(os.path.join(args['s'], sframe))
-
-	compress(sf, os.path.join(args['s'], sframe.replace('.sframe', '.tejas')))
-
 def compress(data, target_path, compress_masks=True, compress_images=True, compress_annotations=True, masks_col='stateMasks', image_col='image', annotations_col='annotations'):
 	os.makedirs(target_path)
 
@@ -53,4 +38,18 @@ def compress(data, target_path, compress_masks=True, compress_images=True, compr
 		np.savez_compressed(os.path.join(ann_subdir, 'annotations.npz'), compressed)
 		with open(os.path.join(ann_subdir, 'labels.pickle'), 'wb') as handle:
 		    pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+parser = argparse.ArgumentParser(description='This compresses an SFrame in Turicreate format.')
+parser.add_argument('-s', help='The SFrame directory.', required=True)
+parser.add_argument('-o', help='The output directory.', required=True)
+args = vars(parser.parse_args())
+
+sframes = [file for file in os.listdir(args['s']) if file.endswith(".sframe")]
+pbar = tqdm(sframes)
+for sframe in pbar:
+	pbar.set_description("Loading in {0}".format(sframe))
+	# LOAD IN 
+	sf = tc.load_sframe(os.path.join(args['s'], sframe))
+
+	compress(sf, os.path.join(args['s'], sframe.replace('.sframe', '.tejas')))
 
