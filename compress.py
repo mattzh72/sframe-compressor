@@ -22,32 +22,35 @@ for sframe in pbar:
 	pbar.set_description("Loading in {0}".format(sframe))
 	# LOAD IN 
 	sf = tc.load_sframe(os.path.join(args['s'], sframe))
-	parent_dir = os.path.join(args['o'], Configs.SFRAME.replace('.sframe', '.tejas'))
-	os.makedirs(parent_dir)
+
+	compress(sf, os.path.join(args['s'], sframe.replace('.sframe', '.tejas')))
+
+def compress(data, target_path, compress_masks=True, compress_images=True, compress_annotations=True, masks_col='stateMasks', image_col='image', annotations_col='annotations'):
+	os.makedirs(target_path)
 
 	# COMPRESS MASKS
-	pbar.set_description("Packing masks")
-	mask_subdir = os.path.join(parent_dir, Configs.MASKS_COL)
-	os.makedirs(mask_subdir)
-	mask_col = sf['stateMasks']
-	for idx in range(len(mask_col)):
-		masks = mask_col[idx]
-		s, p, i = compress_masks(masks)
-		np.savez_compressed(os.path.join(mask_subdir, '{0}.npz'.format(idx)), s, p, i)
+	if compress_masks:
+		mask_subdir = os.path.join(target_path, masks_col)
+		os.makedirs(mask_subdir)
+		mask_col = sf[masks_col]
+		for idx in range(len(mask_col)):
+			masks = mask_col[idx]
+			s, p, i = compress_masks(masks)
+			np.savez_compressed(os.path.join(mask_subdir, '{0}.npz'.format(idx)), s, p, i)
 
 	# COMPRESS IMAGES
-	pbar.set_description("Packing images")
-	img_subdir = os.path.join(parent_dir, Configs.IMAGE_COL)
-	os.makedirs(img_subdir)
-	compile_video([img.pixel_data for img in sf[Configs.IMAGE_COL]], target=os.path.join(img_subdir, 'frames.mp4'))
+	if compress_images:
+		img_subdir = os.path.join(target_path, image_col)
+		os.makedirs(img_subdir)
+		compile_video([img.pixel_data for img in sf[image_col]], target=os.path.join(img_subdir, 'frames.mp4'))
 
 	# COMPRESS ANNOTATIONS
-	pbar.set_description("Packing annotations")
-	ann_subdir = os.path.join(parent_dir, Configs.ANNOTATIONS_COL)
-	os.makedirs(ann_subdir)
-	ann_col = sf['annotations']
-	compressed, labels = compress_annotations(ann_col)
-	np.savez_compressed(os.path.join(ann_subdir, 'annotations.npz'), compressed)
-	with open(os.path.join(ann_subdir, 'labels.pickle'), 'wb') as handle:
-	    pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	if compress_annotations:
+		ann_subdir = os.path.join(target_path, annotations_col)
+		os.makedirs(ann_subdir)
+		ann_col = sf[annotations_col]
+		compressed, labels = compress_annotations(ann_col)
+		np.savez_compressed(os.path.join(ann_subdir, 'annotations.npz'), compressed)
+		with open(os.path.join(ann_subdir, 'labels.pickle'), 'wb') as handle:
+		    pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
