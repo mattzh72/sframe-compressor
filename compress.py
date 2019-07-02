@@ -11,8 +11,6 @@ from utils.image import compress_img, compile_video
 from utils.mask import compress_masks
 
 def compress(data, target_path, compress_masks=True, compress_images=True, compress_annotations=True, masks_col='stateMasks', image_col='image', annotations_col='annotations'):
-	os.makedirs(target_path)
-
 	# COMPRESS MASKS
 	if compress_masks:
 		mask_subdir = os.path.join(target_path, masks_col)
